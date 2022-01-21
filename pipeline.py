@@ -3,21 +3,15 @@ import numpy as np
 import os
 import torch
 
-
-sys.path.append("C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/visualization")
-from visualization.config import ConfigFile
-from animation import animate
-from meshlib import Mesh
-
-sys.path.append("C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/model_testing")
-from model_test import input_creation, output_extraction
-import phoneme_detection as phde
+from phoneme_recognition import *
+from visualization import *
+from alphsistant import *
 
 if __name__ == "__main__":
     face_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/alphsistant_face_tris.txt"
     audio_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/audio/sa1.wav"
 
-    df = phde.phoneme_csv_creation(audio_path)
+    df = phoneme_csv_creation(audio_path)
     X = input_creation(df)
     print("Input created")
 
