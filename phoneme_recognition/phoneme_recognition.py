@@ -117,7 +117,7 @@ def audioToLetters(model_path, audio_filename):
             # {'text': ''}
             continue
         for obj in sentence['result']:
-            w = custom_Word.Word(obj)  # create custom Word object
+            w = Word(obj)  # create custom Word object
             list_of_Words.append(w)  # and add it to list
 
     wf.close()  # close audiofile

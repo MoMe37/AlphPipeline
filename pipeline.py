@@ -20,15 +20,14 @@ if __name__ == "__main__":
     y = model(X)
     print("Output computed")
 
-    vert_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/prediction"
-    files=os.listdir(vert_path)
+    vertice_file_path = "./prediction"
+    files=os.listdir(vertice_file_path)
     for i in range(0,len(files)):
-        os.remove(vert_path+'/'+files[i])
-    output_extraction(y,vert_path)
+        os.remove(vertice_file_path+'/'+files[i])
+    output_extraction(y,vertice_file_path)
     print("Output extracted !")
 
-    vertice_file_path = "./prediction"
-    face_file_path = "./alphsistant_face_tris.txt"
+    face_file_path = "./alphsistant/data/alphsistant_face_tris.txt"
 
     for filename in os.listdir(vertice_file_path):
         filename_we = os.path.splitext(filename)[0]
@@ -47,6 +46,6 @@ if __name__ == "__main__":
                 f_file.close()
             obj_file.close()
 
-    cfg = ConfigFile.load("C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/suzanne_test/markers_test.yml")
+    cfg = ConfigFile.load("./alphsistant/data/suzanne_test/markers_test.yml")
     #cfg = ConfigFile.load("C:/Users/Enzo.Magal/Documents/Enzo2021/alphsistant_code/deformation_external/models/lowpoly/markers-cat-voxel.yml")
-    animate(vert_path, face_path, cfg)
+    animate(vertice_file_path, face_path, cfg)

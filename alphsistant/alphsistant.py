@@ -6,7 +6,7 @@ from torch import nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 
-import phoneme_detection as phde
+import phoneme_recognition.phoneme_recognition as phde
 
 class CustomSKDataset(Dataset):
     def __init__(self, csv_file):  
