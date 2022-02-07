@@ -18,3 +18,15 @@ def test_Visualization():
     visu.animate()
     visu.set_camera()
     visu.afficher()
+
+def test_update_fig_retargeting():
+    visu = vis.Visualization(2, 2)
+
+    visu.update_fig(1, 1, 'C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/face_mesh/sa1')
+    visu.update_fig(1, 2, './prediction')
+    visu.update_fig(2, 1, './prediction')
+
+    visu.update_fig_retargeting(2, 2, './alphsistant/data/suzanne_test/markers_test.yml')
+
+    visu.set_camera()
+    visu.afficher()

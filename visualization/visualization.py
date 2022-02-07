@@ -47,10 +47,8 @@ class Visualization:
                 x=-10000,
                 y=10000,
                 z=5000
-            )
-        
-        
-    )
+            )  
+        )   
     
     def afficher(self):
         self.fig.show()
@@ -145,6 +143,47 @@ class Visualization:
             margin=dict(l=0, r=0),
             # scene_camera=camera
         )
+    
+    def update_fig_retargeting(self, subplot_x, subplot_y, filepath, identity=False):
+        cfg = ConfigFile.load(filepath)
+        corr_markers = cfg.markers
+        if identity:
+            corr_markers = np.ascontiguousarray(np.array((corr_markers[:, 0], corr_markers[:, 0]), dtype=np.int).T)
+        
+        original_source = Mesh.load(cfg.source.reference)
+        original_target = Mesh.load(cfg.target.reference)
+        if identity:
+            original_target = Mesh.load(cfg.source.reference)
+        mapping = get_correspondence(original_source, original_target, corr_markers)
+        transf = Transformation(original_source, original_target, mapping, smoothness=1)
+
+        assert list(cfg.source.load_poses())
+        results = [transf(pose) for pose in list(cfg.source.load_poses())]
+
+        fig = Figure(
+            data=[BrowserVisualizer.make_mesh(results[0].transpose((0, 2, 1)), **self.mesh_kwargs)],
+            layout=dict(
+                updatemenus=[
+                    dict(type="buttons",
+                        buttons=[
+                            dict(
+                                label="Play",
+                                method="animate",
+                                args=[None, {
+                                    "mode": "afterall",
+                                    "frame": {"duration": 40, "redraw": True},
+                                    "fromcurrent": False,
+                                    "transition": {"duration": 40, "easing": "linear", "ordering": "traces first"}
+                                }]
+                            )
+                        ])
+                ],
+            ),
+            frames=[go.Frame(data=[BrowserVisualizer.make_mesh(p.transpose((0, 2, 1)), **self.mesh_kwargs)]) for p in results]
+        )
+
+        self.fig.add_trace(fig['data'][0], subplot_x, subplot_y)
+        self.filepath[subplot_x-1][subplot_y-1] = filepath
 
 def make_animation(transf: Transformation, poses: Sequence[Mesh], mesh_list):
     assert poses

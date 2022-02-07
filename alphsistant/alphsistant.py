@@ -97,6 +97,6 @@ def output_extraction(y, save_path):
     
 
     for i in range(len(y)):
-        output = y[i][0] * basis + y[i][1] * jaw_open + y[i][2] * left_eye_closed + y[i][3] * mouth_open + y[i][4] * right_eye_closed + y[i][5] * smile_left + y[i][6] * smile_right + y[i][7] * smile
+        output = y[i][0] * basis + y[i][1] * jaw_open + y[i][2] * left_eye_closed + y[i][3] * mouth_open + y[i][4] * right_eye_closed+ y[i][5] * smile + y[i][6] * smile_left + y[i][7] * smile_right 
         np.savetxt(save_path + "/face_" + '{:03}'.format(i) + ".txt", output)
     print("Extraction DONE")
