@@ -90,31 +90,61 @@ class Visualization:
     def animate(self):
 
         targetPattern = "/*.obj"
-        data = []
+        frames = []
         meshlist = []
         for i in range(self.subplot_x):
             meshlist.append([])
-            
             for y in range(self.subplot_y):
                 path_list = glob.glob(self.filepath[i][y] + targetPattern)
                 mesh_sub_list = []
                 for n in range(len(path_list)):
                     mesh_sub_list.append(Mesh.load(path_list[n]))
                 meshlist[i].append(mesh_sub_list)
+
         size_list = []
         for i in range(len(meshlist)):
             for y in range(len(meshlist[i])):
                 size_list.append(len(meshlist[i][y]))
+
         for t in range(min(size_list)):
+            data = []
             for i in range(self.subplot_x):
-                data.append([])
                 for y in range(self.subplot_y):
+                    data.append(BrowserVisualizer.make_mesh(meshlist[i][y][t], **self.mesh_kwargs))
+            frames.append(go.Frame(data = data))
 
-            
-            data[i].append(BrowserVisualizer.make_mesh(mesh_list[i], **self.mesh_kwargs))
+        self.fig.frames=frames
+        button = dict(
+                    label='Play',
+                    method='animate',
+                    args=[None, {
+                                    "mode": "afterall",
+                                    "frame": {"duration": 40, "redraw": True},
+                                    "fromcurrent": False,
+                                    "transition": {"duration": 40, "easing": "linear", "ordering": "traces first"}
+                                }])
+        self.fig.update_layout(updatemenus=[dict(type='buttons', buttons=[button])])
 
-        frames=[go.Frame(data=data)
-                             for i in range(min(len(mesh_list1), len(mesh_list2)))]
+    def set_camera(self):
+        camera = dict(
+            up=dict(x=0, y=1, z=0)
+        )
+        scene = dict(
+            aspectmode='data',
+            xaxis_title='X',
+            yaxis_title='Z',
+            zaxis_title='Y',
+            camera=camera,
+            dragmode='turntable'
+        )
+        self.fig.update_layout(
+            scene=scene,
+            scene2=scene,
+            yaxis=dict(scaleanchor="x", scaleratio=1),
+            yaxis2=dict(scaleanchor="x", scaleratio=1),
+            margin=dict(l=0, r=0),
+            # scene_camera=camera
+        )
 
 def make_animation(transf: Transformation, poses: Sequence[Mesh], mesh_list):
     assert poses
