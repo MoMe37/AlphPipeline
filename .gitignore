@@ -1,1 +1,6 @@
-"truc" 
+
+# ignore all obj
+*.obj
+
+# ignore all txt
+*.txt

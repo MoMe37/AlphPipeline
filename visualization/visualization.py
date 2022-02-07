@@ -17,6 +17,104 @@ from .correspondence import get_correspondence
 from render.plot import BrowserVisualizer
 from meshlib.mesh import Mesh
 
+class Visualization:
+    def __init__(self, nbr_subplot_x, nbr_subplot_y):
+        specs = []
+        self.filepath = []
+        for i  in range(nbr_subplot_x):
+            liste = []
+            self.filepath.append([])
+            for y in range(nbr_subplot_y):
+                self.filepath[i].append('')
+                liste.append({'type': 'surface'})
+            specs.append(liste)
+        self.fig = make_subplots(rows = nbr_subplot_x, cols = nbr_subplot_y, specs = specs)
+        self.subplot_x = nbr_subplot_x
+        self.subplot_y = nbr_subplot_y
+        self.mesh_kwargs = dict(
+            color='#666',
+            opacity=1.0,
+            flatshading=True,
+            lighting=dict(
+                ambient=0.1,
+                diffuse=1.0,
+                facenormalsepsilon=0.0000000000001,
+                roughness=0.3,
+                specular=0.7,
+                fresnel=0.001
+            ),
+            lightposition=dict(
+                x=-10000,
+                y=10000,
+                z=5000
+            )
+        
+        
+    )
+    
+    def afficher(self):
+        self.fig.show()
+    
+    def update_fig(self, subplot_x, subplot_y, filepath):
+        targetPattern = "/*.obj"
+        path_list = glob.glob(filepath + targetPattern)
+        
+        mesh_list = []
+        for i in range(len(path_list)):
+            mesh_list.append(Mesh.load(path_list[i]))
+
+        fig = Figure(
+            data=[BrowserVisualizer.make_mesh(mesh_list[0], **self.mesh_kwargs)],
+            layout=dict(
+                updatemenus=[
+                    dict(type="buttons",
+                        buttons=[
+                            dict(
+                                label="Play figure " + str(subplot_x) + "," + str(subplot_y),
+                                method="animate",
+                                args=[None, {
+                                    "mode": "afterall",
+                                    "frame": {"duration": 40, "redraw": True},
+                                    "fromcurrent": False,
+                                    "transition": {"duration": 40, "easing": "linear", "ordering": "traces first"}
+                                }]
+                            )
+                        ])
+                ],
+            ),
+            frames=[go.Frame(data=[BrowserVisualizer.make_mesh(mesh_list[i], **self.mesh_kwargs)]) for i in range(len(mesh_list))]
+        )
+        self.fig.add_trace(fig['data'][0], subplot_x, subplot_y)
+        self.filepath[subplot_x-1][subplot_y-1] = filepath
+    
+    def animate(self):
+
+        targetPattern = "/*.obj"
+        data = []
+        meshlist = []
+        for i in range(self.subplot_x):
+            meshlist.append([])
+            
+            for y in range(self.subplot_y):
+                path_list = glob.glob(self.filepath[i][y] + targetPattern)
+                mesh_sub_list = []
+                for n in range(len(path_list)):
+                    mesh_sub_list.append(Mesh.load(path_list[n]))
+                meshlist[i].append(mesh_sub_list)
+        size_list = []
+        for i in range(len(meshlist)):
+            for y in range(len(meshlist[i])):
+                size_list.append(len(meshlist[i][y]))
+        for t in range(min(size_list)):
+            for i in range(self.subplot_x):
+                data.append([])
+                for y in range(self.subplot_y):
+
+            
+            data[i].append(BrowserVisualizer.make_mesh(mesh_list[i], **self.mesh_kwargs))
+
+        frames=[go.Frame(data=data)
+                             for i in range(min(len(mesh_list1), len(mesh_list2)))]
 
 def make_animation(transf: Transformation, poses: Sequence[Mesh], mesh_list):
     assert poses
