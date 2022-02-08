@@ -86,11 +86,16 @@ for filename in os.listdir(vertice_file_path):
             f_file.close()
         obj_file.close()
 
-visu = vis.Visualization(1, 3)
+
+title = ('Vidéo', 'Shape Keys', 'Prédiction', 'Vidéo retargeting', 'Shape Keys retargeting', 'Prédiction retargeting')
+visu = vis.Visualization(2, 3, title)
 
 visu.update_fig(1, 1, 'C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/face_mesh/sa1')
 visu.update_fig(1, 2, 'C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/sk/sa1')
 visu.update_fig(1, 3, './prediction')
+visu.update_fig_retargeting(2, 1, './alphsistant/data/suzanne_test/video_retargeting.yml')
+visu.update_fig_retargeting(2, 2, './alphsistant/data/suzanne_test/sk_retargeting.yml')
+visu.update_fig_retargeting(2, 3, './alphsistant/data/suzanne_test/prediction_retargeting.yml')
 
 visu.animate()
 visu.set_camera()

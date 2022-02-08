@@ -18,17 +18,20 @@ from render.plot import BrowserVisualizer
 from meshlib.mesh import Mesh
 
 class Visualization:
-    def __init__(self, nbr_subplot_x, nbr_subplot_y):
+    def __init__(self, nbr_subplot_x, nbr_subplot_y, title):
         specs = []
         self.filepath = []
+        self.type = []
         for i  in range(nbr_subplot_x):
             liste = []
             self.filepath.append([])
+            self.type.append([])
             for y in range(nbr_subplot_y):
                 self.filepath[i].append('')
+                self.type[i].append('')
                 liste.append({'type': 'surface'})
             specs.append(liste)
-        self.fig = make_subplots(rows = nbr_subplot_x, cols = nbr_subplot_y, specs = specs)
+        self.fig = make_subplots(rows = nbr_subplot_x, cols = nbr_subplot_y, subplot_titles=title, specs = specs)
         self.subplot_x = nbr_subplot_x
         self.subplot_y = nbr_subplot_y
         self.mesh_kwargs = dict(
@@ -84,19 +87,37 @@ class Visualization:
         )
         self.fig.add_trace(fig['data'][0], subplot_x, subplot_y)
         self.filepath[subplot_x-1][subplot_y-1] = filepath
+        self.type[subplot_x-1][subplot_y-1] = 'normal'
     
-    def animate(self):
+    def animate(self, identity=False):
 
         targetPattern = "/*.obj"
         frames = []
         meshlist = []
         for i in range(self.subplot_x):
             meshlist.append([])
-            for y in range(self.subplot_y):
-                path_list = glob.glob(self.filepath[i][y] + targetPattern)
+            for j in range(self.subplot_y):
                 mesh_sub_list = []
-                for n in range(len(path_list)):
-                    mesh_sub_list.append(Mesh.load(path_list[n]))
+                if self.type[i][j] == 'normal':
+                    path_list = glob.glob(self.filepath[i][j] + targetPattern)
+                    for n in range(len(path_list)):
+                        mesh_sub_list.append(Mesh.load(path_list[n]))
+                elif self.type[i][j] == 'retargeting':
+                    cfg = ConfigFile.load(self.filepath[i][j])
+                    corr_markers = cfg.markers
+                    if identity:
+                        corr_markers = np.ascontiguousarray(np.array((corr_markers[:, 0], corr_markers[:, 0]), dtype=np.int).T)
+                    
+                    original_source = Mesh.load(cfg.source.reference)
+                    original_target = Mesh.load(cfg.target.reference)
+                    if identity:
+                        original_target = Mesh.load(cfg.source.reference)
+                    mapping = get_correspondence(original_source, original_target, corr_markers)
+                    transf = Transformation(original_source, original_target, mapping, smoothness=1)
+
+                    assert list(cfg.source.load_poses())
+                    results = [transf(pose) for pose in list(cfg.source.load_poses())]
+                    mesh_sub_list = results
                 meshlist[i].append(mesh_sub_list)
 
         size_list = []
@@ -107,8 +128,11 @@ class Visualization:
         for t in range(min(size_list)):
             data = []
             for i in range(self.subplot_x):
-                for y in range(self.subplot_y):
-                    data.append(BrowserVisualizer.make_mesh(meshlist[i][y][t], **self.mesh_kwargs))
+                for j in range(self.subplot_y):
+                    if self.type[i][j] == 'normal':
+                        data.append(BrowserVisualizer.make_mesh(meshlist[i][j][t], **self.mesh_kwargs))
+                    elif self.type[i][j] == 'retargeting':
+                        data.append(BrowserVisualizer.make_mesh(meshlist[i][j][t].transpose((0, 2, 1)), **self.mesh_kwargs))
             frames.append(go.Frame(data = data))
 
         self.fig.frames=frames
@@ -125,7 +149,8 @@ class Visualization:
 
     def set_camera(self):
         camera = dict(
-            up=dict(x=0, y=1, z=0)
+            up=dict(x=0, y=1, z=0),
+            eye=dict(x=0, y=-2, z=0)
         )
         scene = dict(
             aspectmode='data',
@@ -138,10 +163,14 @@ class Visualization:
         self.fig.update_layout(
             scene=scene,
             scene2=scene,
+            scene3=scene,
+            scene4=scene,
+            scene5=scene,
+            scene6=scene,
             yaxis=dict(scaleanchor="x", scaleratio=1),
             yaxis2=dict(scaleanchor="x", scaleratio=1),
             margin=dict(l=0, r=0),
-            # scene_camera=camera
+            scene_camera=camera
         )
     
     def update_fig_retargeting(self, subplot_x, subplot_y, filepath, identity=False):
@@ -184,6 +213,7 @@ class Visualization:
 
         self.fig.add_trace(fig['data'][0], subplot_x, subplot_y)
         self.filepath[subplot_x-1][subplot_y-1] = filepath
+        self.type[subplot_x-1][subplot_y-1] = 'retargeting'
 
 def make_animation(transf: Transformation, poses: Sequence[Mesh], mesh_list):
     assert poses
