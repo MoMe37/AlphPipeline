@@ -17,7 +17,9 @@ You will need the following librairies to work on this project :
 
 You will have to go to the following steps to install this projet :
 1. Download the following repository
-`git clone https://github.com/MoMe37/AlphPipeline.git`
+
+```git clone https://github.com/MoMe37/AlphPipeline.git```
+
 2. Download our azure repository with the data and the existing models
 3. Put the data repository into the same repo that AlphPipeline
 

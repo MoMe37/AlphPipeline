@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import librosa
 
 import torch
 from torch import nn
@@ -16,9 +17,9 @@ class CustomSKDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        X = list(data.loc[idx, ["a1", "o1", "c1", "g1", "l1", "b1", "f1", "t1", "j1", "u1", "q1", "a2", "o2", "c2", "g2", "l2", "b2", "f2", "t2", "j2", "u2", "q2","a3", "o3", "c3", "g3", "l3", "b3", "f3", "t3", "j3", "u3", "q3"]])
+        
         y = list(data.loc[idx, ["Basis.txt", "jaw_open.txt", "left_eye_closed.txt", "mouth_open.txt", "right_eye_closed.txt", "smile.txt", "smile_left.txt", "smile_right.txt"]])     
-        X = torch.flatten(torch.tensor(X).float()) 
+        X = torch.flatten(sample) 
         y = torch.flatten(torch.tensor(y).float())          
         # X et y sont des tenseurs flat
         return X, y
@@ -70,18 +71,6 @@ def test_loop(dataloader, model, loss_fn):
     test_loss /= num_batches
     print(f"Test Error: \nAvg loss: {test_loss:>8f} \n")
 
-def input_creation(phoneme_dataframe):
-    df_frame =  pd.DataFrame(0, index = [], columns=['a1', 'o1', 'c1', 'g1', 'l1', 'b1', 'f1', 't1', 'j1', 'u1', 'q1', 'a2', 'o2', 'c2', 'g2', 'l2', 'b2', 'f2', 't2', 'j2', 'u2', 'q2','a3', 'o3', 'c3', 'g3', 'l3', 'b3', 'f3', 't3', 'j3', 'u3', 'q3'])
-
-    for i in range(len(phoneme_dataframe)-3):
-        for y in range(3):
-            df_frame.loc[i, ['a'+ str(y+1), 'o'+ str(y+1), 'c'+ str(y+1), 'g'+ str(y+1), 'l'+ str(y+1), 'b'+ str(y+1), 'f'+ str(y+1), 't'+ str(y+1), 'j'+ str(y+1), 'u'+ str(y+1), 'q'+ str(y+1)]] = list(phoneme_dataframe.loc[i+y, ['a', 'o', 'c', 'g', 'l', 'b', 'f', 't', 'j', 'u', 'q']])
-    X = []
-    for i in range(len(df_frame)):
-        X.append(list(df_frame.loc[i, ['a1', 'o1', 'c1', 'g1', 'l1', 'b1', 'f1', 't1', 'j1', 'u1', 'q1', 'a2', 'o2', 'c2', 'g2', 'l2', 'b2', 'f2', 't2', 'j2', 'u2', 'q2','a3', 'o3', 'c3', 'g3', 'l3', 'b3', 'f3', 't3', 'j3', 'u3', 'q3']]))
-    X = torch.tensor(X).float()
-    return(X)
-
 def output_extraction(y, save_path):
     y = y.detach().numpy()
     output = []
@@ -100,3 +89,33 @@ def output_extraction(y, save_path):
         output = y[i][0] * basis + y[i][1] * jaw_open + y[i][2] * left_eye_closed + y[i][3] * mouth_open + y[i][4] * right_eye_closed+ y[i][5] * smile + y[i][6] * smile_left + y[i][7] * smile_right 
         np.savetxt(save_path + "/face_" + '{:03}'.format(i) + ".txt", output)
     print("Extraction DONE")
+
+def mel_spectrogram_creation(audio_path):
+    samples, sample_rate = librosa.load(audio_path, sr=None) #on charge le son 
+    spectrogram = librosa.stft(samples) #short time fourier transform
+    sgram_mag, _ = librosa.magphase(spectrogram)
+    mel_scale_sgram = librosa.feature.melspectrogram(S=sgram_mag, sr=sample_rate)
+    mel_sgram = librosa.amplitude_to_db(mel_scale_sgram, ref=np.min)
+    return mel_sgram, sample_rate
+
+def mel_spec_sample(mel_spectrogram, nbr_sample):
+    sample_list = []
+    for i in range(nbr_sample-1):
+        sample = mel_spectrogram[:,int(i*(len(mel_spectrogram[0])/nbr_sample)):int(5+i*(len(mel_spectrogram[0])/nbr_sample))]
+        tens = torch.tensor(sample)
+        sample_list.append(tens)
+    sample = mel_spectrogram[:,len(mel_spectrogram[0])-5:len(mel_spectrogram[0])]
+    tens = torch.tensor(sample).flatten
+    sample_list.append(tens)
+    return sample_list
+
+def input_data_creation(sk_df):
+    files = ['sa1', 'sa2']
+    for record in files:
+        filepath = "../fadg0/audio/" + record + ".wav"
+        mel_spec, sample_rate = mel_spectrogram_creation(filepath)
+        sample = mel_spec_sample(mel_spec, 103)
+        sk_weights = []
+        for i in np.where(sk_df.loc[:,'sequence'] == record):
+            sk_weights.append(list(sk_df.loc[i, ["Basis.txt", "jaw_open.txt", "left_eye_closed.txt", "mouth_open.txt", "right_eye_closed.txt", "smile.txt", "smile_left.txt", "smile_right.txt"]]))
+        print(len(sk_weights))
