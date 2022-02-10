@@ -9,7 +9,7 @@ from alphsistant import *
 
 df = pd.read_csv('./alphsistant/data/ds_weights.csv')
 
-vertice_file_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/sk/sa1"
+vertice_file_path = "../fadg0/sk/sa1"
 files=os.listdir(vertice_file_path)
 for i in range(0,len(files)):
     os.remove(vertice_file_path+'/'+files[i])
@@ -46,10 +46,10 @@ for filename in os.listdir(vertice_file_path):
                 f_file.close()
             obj_file.close()
 
-folder1 = "C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/face_mesh/sa1"
+folder1 = "../fadg0/face_mesh/sa1"
 
 face_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/alphsistant_face_tris.txt"
-audio_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/audio/sa1.wav"
+audio_path = "../fadg0/audio/sa1.wav"
 
 df = phoneme_csv_creation(audio_path)
 X = input_creation(df)
@@ -90,8 +90,8 @@ for filename in os.listdir(vertice_file_path):
 title = ('Vidéo', 'Shape Keys', 'Prédiction', 'Vidéo retargeting', 'Shape Keys retargeting', 'Prédiction retargeting')
 visu = vis.Visualization(2, 3, title)
 
-visu.update_fig(1, 1, 'C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/face_mesh/sa1')
-visu.update_fig(1, 2, 'C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/sk/sa1')
+visu.update_fig(1, 1, '../fadg0/face_mesh/sa1')
+visu.update_fig(1, 2, '../fadg0/sk/sa1')
 visu.update_fig(1, 3, './prediction')
 visu.update_fig_retargeting(2, 1, './alphsistant/data/suzanne_test/video_retargeting.yml')
 visu.update_fig_retargeting(2, 2, './alphsistant/data/suzanne_test/sk_retargeting.yml')

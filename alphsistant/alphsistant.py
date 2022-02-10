@@ -98,7 +98,7 @@ def mel_spectrogram_creation(audio_path):
     mel_sgram = librosa.amplitude_to_db(mel_scale_sgram, ref=np.min)
     return mel_sgram, sample_rate
 
-def mel_spec_sample(mel_spectrogram, nbr_sample):
+def mel_spec_sample(mel_spectrogram, window_size, nbr_sample):
     sample_list = []
     for i in range(nbr_sample-1):
         sample = mel_spectrogram[:,int(i*(len(mel_spectrogram[0])/nbr_sample)):int(5+i*(len(mel_spectrogram[0])/nbr_sample))]
