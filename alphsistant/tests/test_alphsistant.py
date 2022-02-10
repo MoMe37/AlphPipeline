@@ -5,19 +5,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 def test_mel_spectrogram_creation():
-    mel_spec1, sample_rate = alp.mel_spectrogram_creation("../fadg0/audio/sa1.wav")
+    mel_spec1, sample_rate = alp.mel_spectrogram_creation("../AlphData/fadg0/audio/sa1.wav")
 
     assert sample_rate == 32000
     assert len(mel_spec1) == 128
     assert len(mel_spec1[0]) == 298
 
-    mel_spec2, sample_rate = alp.mel_spectrogram_creation("../fadg0/audio/sa2.wav")
+    mel_spec2, sample_rate = alp.mel_spectrogram_creation("../AlphData/fadg0/audio/sa2.wav")
 
     assert sample_rate == 32000
     assert len(mel_spec2) == 128
     assert len(mel_spec2[0]) == 258
 
-    mel_spec3, sample_rate = alp.mel_spectrogram_creation("../fadg0/audio/sx289.wav")
+    mel_spec3, sample_rate = alp.mel_spectrogram_creation("../AlphData/fadg0/audio/sx289.wav")
 
     assert sample_rate == 32000
     assert len(mel_spec3) == 128
@@ -30,7 +30,7 @@ def test_mel_spectrogram_creation():
     npt.assert_almost_equal(len(mel_spec3[0])/126, 2.50, decimal=2)
 
 def test_mel_spec_sample():
-    mel_spec1, sample_rate = alp.mel_spectrogram_creation("../fadg0/audio/sa1.wav")
+    mel_spec1, sample_rate = alp.mel_spectrogram_creation("../AlphData/fadg0/audio/sa1.wav")
     sample = alp.mel_spec_sample(mel_spec1, 119)
 
     npt.assert_equal(len(sample), 119)
@@ -44,7 +44,7 @@ def test_mel_spec_sample():
     npt.assert_array_equal(sample[118][:,0], mel_spec2[:,293])
     npt.assert_array_equal(sample[118][:,4], mel_spec2[:,297])
 
-    mel_spec2, sample_rate = alp.mel_spectrogram_creation("../fadg0/audio/sa2.wav")
+    mel_spec2, sample_rate = alp.mel_spectrogram_creation("../AlphData/fadg0/audio/sa2.wav")
     sample = alp.mel_spec_sample(mel_spec2, 103)
 
     npt.assert_equal(len(sample), 103)

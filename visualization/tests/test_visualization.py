@@ -9,11 +9,11 @@ def test_Visualization():
     file_list = np.array([['', '', '']])
     npt.assert_equal(visu.filepath, file_list)
 
-    visu.update_fig(1, 1, '../fadg0/face_mesh/sa1')
+    visu.update_fig(1, 1, '../AlphData/fadg0/face_mesh/sa1')
     visu.update_fig(1, 2, './prediction')
     visu.update_fig(1, 3, './prediction')
     
-    file_list2 = np.array([['../fadg0/face_mesh/sa1', './prediction', './prediction']])
+    file_list2 = np.array([['../AlphData/fadg0/face_mesh/sa1', './prediction', './prediction']])
     npt.assert_equal(visu.filepath, file_list2)
 
     visu.animate()
@@ -24,7 +24,7 @@ def test_vizualisation_retargeting():
     title = ('', '', '', '')
     visu = vis.Visualization(2, 2, title)
 
-    visu.update_fig(1, 1, '../fadg0/face_mesh/sa1')
+    visu.update_fig(1, 1, '../AlphData/fadg0/face_mesh/sa1')
     visu.update_fig(1, 2, './prediction')
     visu.update_fig(2, 1, './prediction')
 

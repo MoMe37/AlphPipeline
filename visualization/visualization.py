@@ -14,8 +14,8 @@ from .vector import Vec3f, Vector3D
 from .config import ConfigFile
 from .transformation import Transformation
 from .correspondence import get_correspondence
-from render.plot import BrowserVisualizer
-from meshlib.mesh import Mesh
+from .render.plot import BrowserVisualizer
+from .meshlib.mesh import Mesh
 
 class Visualization:
     def __init__(self, nbr_subplot_x, nbr_subplot_y, title):

@@ -74,14 +74,14 @@ def test_loop(dataloader, model, loss_fn):
 def output_extraction(y, save_path):
     y = y.detach().numpy()
     output = []
-    basis = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/Basis.txt')
-    jaw_open = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/jaw_open.txt')
-    left_eye_closed = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/left_eye_closed.txt')
-    mouth_open = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/mouth_open.txt')
-    right_eye_closed = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/right_eye_closed.txt')
-    smile_left = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/smile_left.txt')
-    smile_right = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/smile_right.txt')
-    smile = np.loadtxt('C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/shape_keys_v0/smile.txt')
+    basis = np.loadtxt('../../AlphData/shape_keys_v0/Basis.txt')
+    jaw_open = np.loadtxt('../../AlphData/shape_keys_v0/jaw_open.txt')
+    left_eye_closed = np.loadtxt('../../AlphData/shape_keys_v0/left_eye_closed.txt')
+    mouth_open = np.loadtxt('../../AlphData/shape_keys_v0/mouth_open.txt')
+    right_eye_closed = np.loadtxt('../../AlphData/shape_keys_v0/right_eye_closed.txt')
+    smile_left = np.loadtxt('../../AlphData/shape_keys_v0/smile_left.txt')
+    smile_right = np.loadtxt('../../AlphData/shape_keys_v0/smile_right.txt')
+    smile = np.loadtxt('../../AlphData/shape_keys_v0/smile.txt')
 
     
 
@@ -112,7 +112,7 @@ def mel_spec_sample(mel_spectrogram, window_size, nbr_sample):
 def input_data_creation(sk_df):
     files = ['sa1', 'sa2']
     for record in files:
-        filepath = "../fadg0/audio/" + record + ".wav"
+        filepath = "../AlphData/fadg0/audio/" + record + ".wav"
         mel_spec, sample_rate = mel_spectrogram_creation(filepath)
         sample = mel_spec_sample(mel_spec, 103)
         sk_weights = []

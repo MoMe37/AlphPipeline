@@ -10,7 +10,7 @@ import yaml
 from .meshlib import *
 
 
-def get_markers(file: str = "models/lowpoly/markers.txt"):
+def get_markers(file: str = "../AlphData/models/lowpoly/markers.txt"):
     markers = []
     with open(file, 'rt') as f:
         for line in f:
@@ -68,7 +68,7 @@ class ConfigFile:
                 else:
                     assert len(e) == 2
                     result.append((int(e[0]), int(e[1])))
-            return np.array(result, dtype=np.int)
+            return np.array(result, dtype=int)
         elif isinstance(markers, str) and os.path.isfile(os.path.join(basepath, markers)):
             return np.asarray(get_markers(os.path.join(basepath, markers)), dtype=np.int)
         else:
@@ -81,12 +81,12 @@ class ConfigFile:
 
     class Paths:
         class lowpoly:
-            catdog = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/visualization/models/lowpoly/markers-cat-dog.yml"
-            catvoxel = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/visualization/models/lowpoly/markers-cat-voxel.yml"
+            catdog = "../AlphData/models/lowpoly/markers-cat-dog.yml"
+            catvoxel = "../AlphData/models/lowpoly/markers-cat-voxel.yml"
 
         class highpoly:
-            cat_lion = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/visualization/models/highpoly/markers-cat-lion.yml"
-            horse_camel = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/visualization/models/highpoly/markers-horse-camel.yml"
+            cat_lion = "../AlphData/models/highpoly/markers-cat-lion.yml"
+            horse_camel = "../AlphData/models/highpoly/markers-horse-camel.yml"
 
 
 config_default = ConfigFile.load(ConfigFile.Paths.lowpoly.catdog)

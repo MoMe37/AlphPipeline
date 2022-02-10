@@ -1,7 +1,6 @@
 source:
   reference: ./face.obj
   poses:
-    - ../../../prediction/face_000.obj
     - ../../../prediction/face_001.obj
     - ../../../prediction/face_002.obj
     - ../../../prediction/face_003.obj

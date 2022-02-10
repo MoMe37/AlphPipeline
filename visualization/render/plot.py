@@ -2,11 +2,10 @@ from typing import Union, Sequence, Optional, Dict, List, Tuple, Any
 
 import numpy as np
 import plotly.graph_objects as go
-import config
-import sys
 
-sys.path.append('C:/Users/Enzo.Magal/Documents/Enzo2021/alphsistant_code/deformation_external')
-from meshlib import Mesh, Vec3f
+from .. import config
+
+from ..meshlib import Mesh, Vec3f
 
 ODict = Optional[Dict]
 
