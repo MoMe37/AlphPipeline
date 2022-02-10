@@ -8,14 +8,14 @@ from visualization import *
 from alphsistant import *
 
 if __name__ == "__main__":
-    face_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/AlphSistant/alphsistant_face_tris.txt"
-    audio_path = "C:/Users/Enzo.Magal/Documents/Enzo2021/fadg0/audio/sa1.wav"
+    face_path = "./alphsistant/data/alphsistant_face_tris.txt"
+    audio_path = "../AlphData/fadg0/audio/sa1.wav"
 
     df = phoneme_csv_creation(audio_path)
     X = input_creation(df)
     print("Input created")
 
-    model = torch.load('C:/Users/Enzo.Magal/Documents/Enzo2021/models/sk_model.pth')
+    model = torch.load('../AlphData/models-NN/sk_model.pth')
     print("Model structure: ", model, "/n\n")
     y = model(X)
     print("Output computed")
@@ -46,6 +46,6 @@ if __name__ == "__main__":
                 f_file.close()
             obj_file.close()
 
-    cfg = ConfigFile.load("./alphsistant/data/suzanne_test/markers_test.yml")
+    cfg = ConfigFile.load("./alphsistant/data/suzanne_test/prediction_retargeting.yml")
     #cfg = ConfigFile.load("C:/Users/Enzo.Magal/Documents/Enzo2021/alphsistant_code/deformation_external/models/lowpoly/markers-cat-voxel.yml")
     animate(vertice_file_path, face_path, cfg)
