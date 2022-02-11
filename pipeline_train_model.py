@@ -1,3 +1,12 @@
+import sys
+from matplotlib.pyplot import axis
+import numpy as np
+import os
+import torch
+
+from visualization import *
+from alphsistant import *
+
 import torch
 from torch import nn
 from torch import optim
@@ -20,12 +29,12 @@ class CustomSKDataset(Dataset):
     def __getitem__(self, idx):
         record = self.data.loc[idx, "sequence"]
         frame = self.data.loc[idx, "frame"]
-        X = np.loadtxt("../../AlphData/fadg0/spectrogram/" + record + "/" + frame + ".txt")
+        X = np.loadtxt("../AlphData/fadg0/spectrogram_norm/" + record + "/" + frame + ".txt")
         y = list(self.data.loc[idx, ["Basis.txt", "jaw_open.txt", "left_eye_closed.txt", "mouth_open.txt", "right_eye_closed.txt", "smile.txt", "smile_left.txt", "smile_right.txt"]])     
         X = torch.tensor(X)
         X = torch.split(X, 32)
         X = torch.stack(X, axis=0)
-        y = torch.flatten(torch.tensor(y).float())          
+        y = torch.flatten(torch.tensor(y).float())     
         # X et y sont des tenseurs flat
         return X.float(), y
 
@@ -68,7 +77,9 @@ class CNN(nn.Module):
         )
         self.flatten = nn.Flatten()
         self.seq = nn.Sequential(
-            nn.Linear(64 * 4 * 4, 8),
+            nn.Linear(64 * 4 * 4, 512),
+            nn.Dropout(0.2),
+            nn.Linear(512, 8),
         )
         
     def forward(self, x):
@@ -183,35 +194,9 @@ def test(cnn, loaders):
 
 
 
-def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
-
-    print(cm)
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt), horizontalalignment="center", color="white" if cm[i, j] > thresh else "black")
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-
-
-
 if __name__ == "__main__":
 
-    filepath = "../alphsistant/data/ds_weights.csv"
+    filepath = "./alphsistant/data/ds_weights.csv"
     sk_dataset = CustomSKDataset(filepath)
 
     train_size = int(0.8 * len(sk_dataset)) 
@@ -240,9 +225,54 @@ if __name__ == "__main__":
 
     all_labels, all_preds = test(cnn, loaders)
 
-    #confusion_mat = confusion_matrix(all_labels, all_preds)
-    #labels = np.array(['1', '2', '3', '4', '5', '6', '7', '8'])
-    #plt.figure(figsize=(10,10))
-    #plot_confusion_matrix(confusion_mat, labels)
+    torch.save(cnn.state_dict(), "model-cnn.pth")
 
-    torch.save(cnn.state_dict(), "model.pth")
+    input_list = []
+    for i in range(119):
+        X = np.loadtxt("../AlphData/fadg0/spectrogram_norm/sa1/face_" + '{:03}'.format(i+1) + ".txt")
+        X = torch.tensor(X)
+        X = torch.split(X, 32)
+        X = torch.stack(X, axis=0).float()
+        input_list.append(X)
+    input_list = torch.stack(input_list, axis=0)
+    print("Input created")
+
+    y = cnn(input_list)
+    print("Output computed")
+
+    vertice_file_path = "./prediction"
+    files=os.listdir(vertice_file_path)
+    for i in range(0,len(files)):
+        os.remove(vertice_file_path+'/'+files[i])
+    output_extraction(y,vertice_file_path)
+    print("Output extracted !")
+
+    face_file_path = "./alphsistant/data/alphsistant_face_tris.txt"
+
+    for filename in os.listdir(vertice_file_path):
+        filename_we = os.path.splitext(filename)[0]
+        with open("./prediction/" + filename_we + ".obj", 'w+') as obj_file:
+            obj_file.write("# obj {:s}\n\n".format(filename_we))
+            obj_file.write("o {:s}\n\n".format(filename_we))
+            with open(vertice_file_path + "/" + filename, 'r') as v_file:
+                for v in v_file:
+                    array = [float(x) for x in v.split(' ')]
+                    obj_file.write("v {:.4f} {:.4f} {:.4f}\n".format(array[0], array[1], array[2]))
+            obj_file.write("\n")
+            with open(face_file_path, 'r') as f_file:
+                for f in f_file:
+                    array = [int(float(x)) for x in f.split(' ')]
+                    obj_file.write("f {:d} {:d} {:d}\n".format(array[0]+1, array[1]+1, array[2]+1))
+                f_file.close()
+            obj_file.close()
+
+    title = ('Video', 'Shape Keys', 'Prediction')
+    visu = Visualization(1, 3, title)
+
+    visu.update_fig(1, 1, '../AlphData/fadg0/face_mesh/sa1')
+    visu.update_fig(1, 2, '../AlphData/fadg0/sk/sa1')
+    visu.update_fig(1, 3, './prediction')
+
+    visu.animate()
+    visu.set_camera()
+    visu.afficher()
