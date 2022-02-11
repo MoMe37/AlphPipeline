@@ -3,14 +3,31 @@ from torch import nn
 from torch import optim
 from torch.utils.data import Dataset
 
-import os
 import numpy as np
-from numpy import loadtxt
+
+import pandas as pd
 
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
 import itertools
 
+class CustomSKDataset(Dataset):
+    def __init__(self, csv_file):  
+        self.data = pd.read_csv(csv_file)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        record = self.data.loc[idx, "sequence"]
+        frame = self.data.loc[idx, "frame"]
+        X = np.loadtxt("../../AlphData/fadg0/spectrogram/" + record + "/" + frame + ".txt")
+        y = list(self.data.loc[idx, ["Basis.txt", "jaw_open.txt", "left_eye_closed.txt", "mouth_open.txt", "right_eye_closed.txt", "smile.txt", "smile_left.txt", "smile_right.txt"]])     
+        X = torch.tensor(X)
+        X = torch.split(X, 32)
+        X = torch.stack(X, axis=0)
+        y = torch.flatten(torch.tensor(y).float())          
+        # X et y sont des tenseurs flat
+        return X.float(), y
 
 
 class CNN(nn.Module):
@@ -110,58 +127,59 @@ def train(num_epochs, cnn, loaders):
             for images, labels in loaders['test']:
                 test_output = cnn(images)
                 pred_y = torch.max(test_output, 1)[1].data.squeeze()
-                accuracy_test += (pred_y == labels).sum().item() / float(labels.size(0))
+                #accuracy_test += (pred_y == labels).sum().item() / float(labels.size(0))
             
             for images, labels in loaders['train']:
                 train_output = cnn(images)
                 pred_y = torch.max(train_output, 1)[1].data.squeeze()
-                accuracy_train += (pred_y == labels).sum().item() / float(labels.size(0))
+                #accuracy_train += (pred_y == labels).sum().item() / float(labels.size(0))
 
         cnn.train()
 
-        accuracy_test /= len(loaders['test'])
-        accuracy_train /= len(loaders['train'])
-        accuracy_test_values.append(accuracy_test*100)
-        accuracy_train_values.append(accuracy_train*100)
+        #accuracy_test /= len(loaders['test'])
+        #accuracy_train /= len(loaders['train'])
+        #accuracy_test_values.append(accuracy_test*100)
+        #accuracy_train_values.append(accuracy_train*100)
 
-    x = []
-    for i in range(num_epochs):
-        x.append(i+1)
-    plt.figure(figsize=(10,15))
-    plt.subplot(3, 1, 1)
-    plt.title('Loss function')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.plot(x ,np.array(loss_values), 'r')
-    plt.subplot(3, 1, 2)
-    plt.title('Accuracy test data')
-    plt.xlabel('Epoch')
-    plt.ylabel('%')
-    plt.plot(x ,np.array(accuracy_test_values), 'g')
-    plt.subplot(3, 1, 3)
-    plt.title('Accuracy train data')
-    plt.xlabel('Epoch')
-    plt.ylabel('%')
-    plt.plot(x ,np.array(accuracy_train_values), 'b')
+    #x = []
+    #for i in range(num_epochs):
+    #    x.append(i+1)
+    #plt.figure(figsize=(10,15))
+    #plt.subplot(3, 1, 1)
+    #plt.title('Loss function')
+    #plt.xlabel('Epoch')
+    #plt.ylabel('Loss')
+    #plt.plot(x ,np.array(loss_values), 'r')
+    #plt.subplot(3, 1, 2)
+    #plt.title('Accuracy test data')
+    #plt.xlabel('Epoch')
+    #plt.ylabel('%')
+    #plt.plot(x ,np.array(accuracy_test_values), 'g')
+    #plt.subplot(3, 1, 3)
+    #plt.title('Accuracy train data')
+    #plt.xlabel('Epoch')
+    #plt.ylabel('%')
+    #plt.plot(x ,np.array(accuracy_train_values), 'b')
 
 
 
-def test():
+def test(cnn, loaders):
     # Test the model
-    all_preds = torch.tensor([])
-    all_labels = torch.tensor([])
+    all_preds = []
+    all_labels = []
     cnn.eval()
     accuracy = 0
     with torch.no_grad():
         for images, labels in loaders['test']:
-            test_output = cnn(images)
-            pred_y = torch.max(test_output, 1)[1].data.squeeze()
-            accuracy += (pred_y == labels).sum().item() / float(labels.size(0))
+            test_output = cnn(images).numpy().flatten()
+            #pred_y = torch.max(test_output, 1)[1].data.squeeze()
+            #accuracy += (pred_y == labels).sum().item() / float(labels.size(0))
 
-            all_preds = torch.cat((all_preds, pred_y),dim=0)
-            all_labels = torch.cat((all_labels, labels),dim=0)
+            all_preds.append(test_output)
+            all_labels.append(labels.numpy().flatten())
+            break
 
-    accuracy /= len(loaders['test'])
+    #accuracy /= len(loaders['test'])
     print('Test Accuracy of the model on the {} test : {:.2f}%'.format(len(test_dataset), (accuracy*100)))
     return all_labels, all_preds
 
@@ -194,13 +212,13 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
 
 
 if __name__ == "__main__":
-    feature_train = []
-    label_train = []
-    feature_test = []
-    label_test = []
 
-    train_dataset = SampleDataset(feature_train, label_train, transform=nn.BatchNorm1d(64)) #Get dataset Enzo
-    test_dataset = SampleDataset(feature_test, label_test, transform=nn.BatchNorm1d(64))
+    filepath = "../alphsistant/data/ds_weights.csv"
+    sk_dataset = CustomSKDataset(filepath)
+
+    train_size = int(0.8 * len(sk_dataset)) 
+    test_size = len(sk_dataset) - train_size 
+    train_dataset, test_dataset = torch.utils.data.random_split(sk_dataset, [train_size, test_size])
 
     batch_size = 32
     loaders = {
@@ -213,21 +231,20 @@ if __name__ == "__main__":
                                             shuffle=True),
     }
 
-    
     cnn = CNN()
-    loss_func = nn.CrossEntropyLoss()   
+    loss_func = nn.MSELoss()   
     optimizer = optim.Adam(cnn.parameters(), lr = 0.001) 
 
-    num_epochs = 3
+    num_epochs = 2
 
     train(num_epochs, cnn, loaders)
     print('Model has been trained {} times with {} datas'.format(num_epochs, len(train_dataset)))
 
-    all_labels, all_preds = test()
+    all_labels, all_preds = test(cnn, loaders)
 
-    all_labels = all_labels.type(torch.int64)
-    all_preds = all_preds.type(torch.int64)
-    confusion_mat = confusion_matrix(all_labels, all_preds)
-    labels = np.array(['1', '2', '3', '4', '5', '6', '7', '8'])
-    plt.figure(figsize=(10,10))
-    plot_confusion_matrix(confusion_mat, labels)
+    #confusion_mat = confusion_matrix(all_labels, all_preds)
+    #labels = np.array(['1', '2', '3', '4', '5', '6', '7', '8'])
+    #plt.figure(figsize=(10,10))
+    #plot_confusion_matrix(confusion_mat, labels)
+
+    torch.save(cnn.state_dict(), "model.pth")

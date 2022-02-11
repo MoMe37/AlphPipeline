@@ -1,23 +1,78 @@
 import sys
+from matplotlib.pyplot import axis
 import numpy as np
 import os
 import torch
 
-from phoneme_recognition import *
 from visualization import *
 from alphsistant import *
 
-if __name__ == "__main__":
-    face_path = "./alphsistant/data/alphsistant_face_tris.txt"
-    audio_path = "../AlphData/fadg0/audio/sa1.wav"
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Sequential(         
+            nn.Conv2d(
+                in_channels=4,              
+                out_channels=16,            
+                kernel_size=3,              
+                stride=1,                   
+                padding=1,                  
+            ),                              
+            nn.ReLU(),                      
+            nn.MaxPool2d(kernel_size=2),    
+        )
+        self.conv2 = nn.Sequential(         
+            nn.Conv2d(
+                in_channels=16,              
+                out_channels=32,            
+                kernel_size=3,              
+                stride=1,                   
+                padding=1,                  
+            ),   
+            nn.ReLU(),                      
+            nn.MaxPool2d(2),                
+        )
+        self.conv3 = nn.Sequential(         
+            nn.Conv2d(
+                in_channels=32,              
+                out_channels=64,            
+                kernel_size=3,              
+                stride=1,                   
+                padding=1,                  
+            ),   
+            nn.ReLU(),                      
+            nn.MaxPool2d(2),                
+        )
+        self.flatten = nn.Flatten()
+        self.seq = nn.Sequential(
+            nn.Linear(64 * 4 * 4, 8),
+        )
+        
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        # flatten the output of conv2 to (batch_size, 64 * 16 * 16)
+        # x = x.view(x.size(0), -1) 
+        x = self.flatten(x)      
+        output = self.seq(x)
+        return output
 
-    df = phoneme_csv_creation(audio_path)
-    X = input_creation(df)
+if __name__ == "__main__":
+    
+    input_list = []
+    for i in range(119):
+        X = np.loadtxt("../AlphData/fadg0/spectrogram/sa1/face_" + '{:03}'.format(i+1) + ".txt")
+        X = torch.tensor(X)
+        X = torch.split(X, 32)
+        X = torch.stack(X, axis=0).float()
+        input_list.append(X)
+    input_list = torch.stack(input_list, axis=0)
     print("Input created")
 
-    model = torch.load('../AlphData/models-NN/sk_model.pth')
-    print("Model structure: ", model, "/n\n")
-    y = model(X)
+    model = CNN()
+    model.load_state_dict(torch.load('./model_creation/model.pth'))
+    y = model(input_list)
     print("Output computed")
 
     vertice_file_path = "./prediction"
@@ -46,6 +101,13 @@ if __name__ == "__main__":
                 f_file.close()
             obj_file.close()
 
-    cfg = ConfigFile.load("./alphsistant/data/suzanne_test/prediction_retargeting.yml")
-    #cfg = ConfigFile.load("C:/Users/Enzo.Magal/Documents/Enzo2021/alphsistant_code/deformation_external/models/lowpoly/markers-cat-voxel.yml")
-    animate(vertice_file_path, face_path, cfg)
+    title = ('Video', 'Shape Keys', 'Prediction')
+    visu = Visualization(1, 3, title)
+
+    visu.update_fig(1, 1, '../AlphData/fadg0/face_mesh/sa1')
+    visu.update_fig(1, 2, '../AlphData/fadg0/sk/sa1')
+    visu.update_fig(1, 3, './prediction')
+
+    visu.animate()
+    visu.set_camera()
+    visu.afficher()
