@@ -22,27 +22,10 @@ class CustomSKDataset(Dataset):
         X = np.loadtxt("../AlphData/fadg0/spectrogram/" + record + "/" + frame + ".txt", dtype=float)
         y = list(self.data.loc[idx, ["Basis.txt", "jaw_open.txt", "left_eye_closed.txt", "mouth_open.txt", "right_eye_closed.txt", "smile.txt", "smile_left.txt", "smile_right.txt"]])     
         X = torch.tensor(X)
+        X = torch.split(X, 32)
         y = torch.flatten(torch.tensor(y).float())          
         # X et y sont des tenseurs flat
         return X, y
-
-def data_normalization(y_train, y_test):
-    values = []
-    for i in range(len(y_train)):
-        for y in range(len(y_train[i])):
-            values.append(y_train[i][y])
-    for i in range(len(y_test)):
-        for y in range(len(y_test[i])):
-            values.append(y_test[i][y])    
-    mean = np.mean(values)
-    st = np.std(values)
-    for i in range(len(y_train)):
-        for y in range(len(y_train[i])):
-            y_train[i][y] = (y_train[i][y]-mean)/st
-    for i in range(len(y_test)):
-        for y in range(len(y_test[i])):
-            y_test[i][y] = (y_test[i][y]-mean)/st
-    return (y_train, y_test)
 
 def train_loop(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)

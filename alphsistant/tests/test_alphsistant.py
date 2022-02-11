@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 def test_cutome_dataset():
-    sk_weights = pd.read_csv("./alphsistant/data/ds_weights.csv")
-    dataset = alp.CustomSKDataset(sk_weights)
+    filepath = "./alphsistant/data/ds_weights.csv"
+    dataset = alp.CustomSKDataset(filepath)
     X, y = dataset[0]
+    npt.assert_equal(len(X), 4)
+    npt.assert_equal(len(X[0]), 32)
+    npt.assert_equal(len(X[0][0]), 32)
+    npt.assert_equal(len(X[3][0]), 32)
+    npt.assert_equal(len(y), 8)
