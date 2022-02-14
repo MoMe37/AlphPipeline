@@ -36,4 +36,4 @@ def spectrogram_extraction(record):
     for filename in os.listdir(spec_path) :
         os.remove(spec_path + "/" + filename)
     for i in range(nbr_sample):
-        np.savetxt(spec_path + "/face_" + '{:03}'.format(i+1) + ".txt", mel_spectrogram[i], fmt='%d')
+        np.savetxt(spec_path + "/face_" + '{:03}'.format(i+1) + ".txt", mel_spectrogram[i])
